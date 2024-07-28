@@ -1,0 +1,60 @@
+# Import modules
+import cv2
+import numpy as np
+import dlib
+# Create a VideoCapture Object
+video = cv2.VideoCapture("../data/people.mp4")
+# Check if video opened successfully
+if video.isOpened() == False:
+    print("Could not open video!")
+    # Read first frame
+ret, frame = video.read()
+# Check if frame read successfully
+if ret == False:
+    print("Cannot read video")
+# Show the first frame
+cv2.imshow("First Frame",frame)
+cv2.waitKey(0)
+# Specify the initial bounding box
+bbox = cv2.selectROI(frame)
+cv2.destroyAllWindows() 
+# Convert frame to RGB
+rgb = cv2.cvtColor(frame,cv2.COLOR_BGR2RGB)
+# Convert bbox to Dlib rectangle
+(topLeftX, topLeftY, w, h) = bbox
+bottomRightX = topLeftX + w
+bottomRightY = topLeftY + h
+dlibRect = dlib.rectangle(topLeftX, topLeftY, \
+                          bottomRightX, bottomRightY)
+# Create tracker
+tracker = dlib.correlation_tracker()
+# Initialize tracker
+tracker.start_track(rgb, dlibRect)
+# Create a new window where we will display the results
+cv2.namedWindow("Tracker")
+# Display the first frame
+cv2.imshow("Tracker",frame)
+while True:
+    # Read next frame
+    ret, frame = video.read()
+    # Check if frame was read
+    if ret == False:
+        break
+# Convert frame to RGB
+    rgb = cv2.cvtColor(frame,cv2.COLOR_BGR2RGB)
+# Update tracker
+    tracker.update(rgb)
+    objectPosition = tracker.get_position()
+    topLeftX = int(objectPosition.left())
+    topLeftY = int(objectPosition.top())
+    bottomRightX = int(objectPosition.right())
+    bottomRightY = int(objectPosition.bottom())
+    # Create bounding box
+    cv2.rectangle(frame, (topLeftX, topLeftY), (bottomRightX, \
+                          bottomRightY), (0,0,255), 2)
+# Display frame
+    cv2.imshow("Tracker",frame)
+    k = cv2.waitKey(5)
+    if k == 27:
+        break
+cv2.destroyAllWindows()
